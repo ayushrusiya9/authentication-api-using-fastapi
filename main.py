@@ -1,3 +1,4 @@
+import uuid
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
@@ -33,11 +34,11 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 RESET_TOKEN_EXPIRE_MINUTES = int(os.getenv("RESET_TOKEN_EXPIRE_MINUTES"))
 
-def create_reset_token(user_id: int, email: str):
+def create_reset_token(user_id: str, email: str):
     expire = datetime.utcnow() + timedelta(minutes=RESET_TOKEN_EXPIRE_MINUTES)
 
     payload = {
-        "user_id": user_id,
+        "user_id": str(user_id),
         "email": email,
         "purpose": "reset_password",
         "exp": expire
@@ -63,8 +64,9 @@ def signup(user: SignupSchema, db: Session = Depends(get_db)):
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already exists")
 
+    print("Password Length:", len(user.password))
+    print("Password Bytes:", len(user.password.encode("utf-8")))
     hashed_password = hash_password(user.password)
-
     new_user = User(
         name=user.name,
         email=user.email,
@@ -166,10 +168,11 @@ def reset_password(data: ResetPasswordSchema, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="Invalid token purpose")
 
         user_id = payload.get("user_id")
+
     except JWTError:
         raise HTTPException(status_code=400, detail="Token expired or invalid")
 
-    user = db.query(User).filter(User.id == user_id).first()
+    user = db.query(User).filter(User.id == uuid.UUID(user_id)).first()
 
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
