@@ -17,7 +17,6 @@ def get_db():
     finally:
         db.close()
 
-
 from pydantic import BaseModel, Field
 
 # Schemas for request
