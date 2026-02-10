@@ -50,11 +50,9 @@ def create_reset_token(user_id: str, email: str):
 
 Base.metadata.create_all(bind=engine)
 
-
 @app.get("/")
 def home():
     return {"message": "FastAPI and PostgreSQL Working"}
-
 
 @app.post("/signup/")
 def signup(user: SignupSchema, db: Session = Depends(get_db)):
@@ -78,8 +76,6 @@ def signup(user: SignupSchema, db: Session = Depends(get_db)):
     db.refresh(new_user)
 
     return {"message": "User created", "user_id": new_user.id}
-
-
 
 @app.post("/login/")
 def login(user: LoginSchema, db: Session = Depends(get_db)):
